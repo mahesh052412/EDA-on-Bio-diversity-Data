@@ -103,5 +103,96 @@ abline(h=0)
 qqnorm(reg_proj_Y00$residuals)
 qqline(reg_proj_Y00$residuals,col="red")
 
+#multiple linear regression
+#select the four coloum apart from given data:
+proj_assg_4 <- proj_assg%>%select(c(6,8,9,12))
+
+#find and add mean of all 4 coloum to proj_data:
+proj_data <- mutate(proj_data,meanof4=rowMeans(proj_assg_4[1:4]))
+
+#sampling for training and testing:
+trainig_sample <- sample(1:nrow(proj_data),0.8*nrow(proj_data))
+training_data <- proj_data[trainig_sample,]
+testing_data <- proj_data[-trainig_sample,]
+
+#Running multiple linear regression model with all 7 species against BD4:
+mlr_proj1 <- lm(meanof4~.,
+                data=training_data[c(1:7,14)],
+                y=T)
+summary(mlr_proj1)
+
+#predicting for remaining 20%:
+mlr_proj1_test <- predict(mlr_proj1,testing_data)
+cor(mlr_proj1_test,testing_data$meanof4)
+df_for_mlr_proj1_test <- data.frame(predicted = mlr_proj1_test,observed = testing_data$meanof4)
+
+#excluding certain species:
+#1 #3 & 6 #0.6883872
+species_proj1 <- lm(meanof4~.,
+                data=training_data[c(1,2,4,5,7,14)],
+                y=T)
+summary(species_proj1)
+species_proj1_test <- predict(species_proj1,testing_data)
+cor(species_proj1_test,testing_data$meanof4)
+df_for_proj1 <- data.frame(predicted = species_proj1_test,observed = testing_data$meanof4)
+
+
+#2 #6 #0.6642133
+species_proj2 <- lm(meanof4~.,
+                    data=training_data[c(1,2,3,4,5,14)],
+                    y=T)
+summary(species_proj2)
+species_proj2_test <- predict(species_proj2,testing_data)
+cor(species_proj2_test,testing_data$meanof4)
+df_for_proj2 <- data.frame(predicted = species_proj2_test,observed = testing_data$meanof4)
+
+
+#3 #3 #0.6959937
+species_proj3 <- lm(meanof4~.,
+                    data=training_data[c(1,2,4,5,6,7,14)],
+                    y=T)
+summary(species_proj3)
+species_proj3_test <- predict(species_proj3,testing_data)
+cor(species_proj3_test,testing_data$meanof4)
+df_for_proj3 <- data.frame(predicted = species_proj3_test,observed = testing_data$meanof4) 
+
+
+#4 #4 & 3 #0.6464906
+species_proj4 <- lm(meanof4~.,
+                    data=training_data[c(1,2,5,6,7,14)],
+                    y=T)
+summary(species_proj4)
+species_proj4_test <- predict(species_proj4,testing_data)
+cor(species_proj4_test,testing_data$meanof4)
+df_for_proj4 <- data.frame(predicted = species_proj4_test,observed = testing_data$meanof4) 
+
+#plotting graph 
+par(mfrow=c(1,1))
+p_1 <- ggplot(df_for_proj1,aes(x=predicted,y=observed))+
+  geom_point()+
+  geom_smooth(method = lm, se=F)+
+  labs(x = "Predicted Values", y = "Observed Values")
+p_2 <- ggplot(df_for_proj2,aes(x=predicted,y=observed))+
+  geom_point()+
+  geom_smooth(method = lm, se=F)+
+  labs(x = "Predicted Values", y = "Observed Values")
+p_3 <- ggplot(df_for_proj3,aes(x=predicted,y=observed))+
+  geom_point()+
+  geom_smooth(method = lm, se=F)+
+  labs(x = "Predicted Values", y = "Observed Values")
+p_4 <- ggplot(df_for_proj4,aes(x=predicted,y=observed))+
+  geom_point()+
+  geom_smooth(method = lm, se=F)+
+  labs(x = "Predicted Values", y = "Observed Values")
+p_5 <- ggplot(df_for_mlr_proj1_test,aes(x=predicted,y=observed))+
+  geom_point()+
+  geom_smooth(method = lm, se=F)+
+  labs(x = "Predicted Values", y = "Observed Values")
+
+
+grid.arrange(p_1, p_2, p_3, p_4, p_5, ncol=2)
+
+AIC(mlr_proj1,species_proj1,species_proj2,species_proj3,species_proj4)
+
 
 
