@@ -18,7 +18,7 @@ proj_data$ecostatusof7 <- rowMeans(proj_data[1:7])
 head(proj_data)
 
 #DATA_EXPLORATION:
-  
+#Difference in ecological species of 7 during different time period:
 x <- ggplot(proj_data, aes(x=ecologicalStatus, fill=period)) +
        geom_histogram() +
        xlim(0.25, 1)
@@ -27,6 +27,7 @@ y <- ggplot(proj_data, aes(x=ecostatusof7, fill=period)) +
       xlim(0.25, 1.5)
 grid.arrange(x,y,ncol=2)
 
+#increase in bees over the time period in easting and northing:
 a <- proj_data %>%
   ggplot(aes(x=Easting, y=Bees)) +
   geom_point() + geom_smooth(method = lm) +
@@ -90,7 +91,6 @@ ggplot(lm_Y00,aes(x=x,y=y)) +
   geom_smooth(method=lm,se=F)
 
 #plotting graph for proj_Y70:
-abline(reg_proj_Y70,col="green")
 plot(jitter(fitted(reg_proj_Y70)),residuals(reg_proj_Y70),xlab="Fitted",ylab="Residuals")
 abline(h=0)
 qqnorm(reg_proj_Y70$residuals)
@@ -194,5 +194,44 @@ grid.arrange(p_1, p_2, p_3, p_4, p_5, ncol=2)
 
 AIC(mlr_proj1,species_proj1,species_proj2,species_proj3,species_proj4)
 
+#open analysis:
+cor(proj_data[1:7], proj_data$ecostatusof7)
 
+cor_species <- proj_data %>% mutate(total=rowSums(proj_data[1:7],na.rm=T)) %>% 
+  select(c("Bees","Butterflies","Hoverflies","Macromoths","ecostatusof7","period","dominantLandClass","total"))
+head(cor_species)
 
+cor_species <- cor_species %>% group_by(dominantLandClass,period) %>% 
+  arrange(desc(ecostatusof7),.by_group = T) %>% top_n(5, wt = ecostatusof7) %>%
+  mutate(count_bees=(Bees/total)*100,
+         count_butterflies=(Butterflies/total)*100,
+         count_hoverflies=(Hoverflies/total)*100,
+         count_macromoths=(Macromoths/total)*100)
+head(cor_species)
+
+cor_species <- cor_species %>% select(c("period","dominantLandClass","count_bees","count_butterflies",
+                         "count_hoverflies","count_macromoths")) %>% 
+  pivot_longer(cols = c("count_bees","count_butterflies",
+                        "count_hoverflies","count_macromoths"),
+               names_to = "species",values_to = "count_percentage" )
+
+#Engaland  
+cor_species %>% filter(str_detect(dominantLandClass,"e")) %>%
+ggplot(aes(x=species,y=count_percentage,fill=period)) +
+  geom_bar(stat = "identity",position = "dodge")+
+  facet_wrap(vars(dominantLandClass),scales = "free_x") +
+  coord_flip()
+
+#Scotland
+cor_species %>% filter(str_detect(dominantLandClass,"s")) %>%
+  ggplot(aes(x=species,y=count_percentage,fill=period)) +
+  geom_bar(stat = "identity",position = "dodge")+
+  facet_wrap(vars(dominantLandClass),scales = "free_x") +
+  coord_flip()
+
+#Wales
+cor_species %>% filter(str_detect(dominantLandClass,"w")) %>%
+  ggplot(aes(x=species,y=count_percentage,fill=period)) +
+  geom_bar(stat = "identity",position = "dodge")+
+  facet_wrap(vars(dominantLandClass),scales = "free_x") +
+  coord_flip()
