@@ -5,3 +5,5 @@ In this project the language used is **R** for the statistical analysis of Biodi
 1. Data Collection
 2. Sampling Methods
 3. Statistical techniques in Analysis
+
+##### Project link: [kaggle](https://www.kaggle.com/code/maheshshekar72/statistical-analysis-using-r/report)
